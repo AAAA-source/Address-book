@@ -66,6 +66,22 @@ bool change_my_favorite(int n)
     return success ;
 }
 
+bool fuzzy_match( char* name1 , char* name2 )
+{
+    unsigned long int len1 = strlen(name1) ;
+    unsigned long int len2 = strlen(name2) ;
+    
+    unsigned long int min = (len1 > len2)? len2 : len1 ;
+    
+    unsigned long int count = 0 ;
+    for(unsigned long int i = 0 ; i < min ; ++i) {
+        if ( name1[i] != name2[i] )
+            ++count ;
+    }
+    
+    return ( count <= 2 ) ;
+}
+
 
 
 bool find_someone(void)
@@ -76,8 +92,18 @@ bool find_someone(void)
     
     int mode ;
     scanf("%d" , &mode) ;
+    putchar('\n') ;
     
     if ( mode == 1 ) {
+        
+        /* for fuzzy search */
+        bool fuzzy ;
+        printf("Do you want fuzzy search ?(Y/N) : ") ;
+        char ans[3] ;
+        scanf("%s" , ans) ;
+        fuzzy = ( ans[0] == 'Y' )? true : false ;
+        
+        
         printf("Find name : ") ;
         char name[100] = {0} ;
         scanf("%s" , name) ;
@@ -92,7 +118,7 @@ bool find_someone(void)
         
         int find = 0 ;
         while ( fscanf(fp , "%s%lld%d" , temp_name , &temp_number , &priority ) != EOF ) {
-            if ( strcmp(temp_name , name) == 0 ) {
+            if ( strcmp(temp_name , name) == 0 || ( fuzzy && fuzzy_match(temp_name , name) ) ) {
                 ++find ;
                 printf("%d : %s %010lld\n" , find , temp_name , temp_number) ;
             }
