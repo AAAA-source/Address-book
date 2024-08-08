@@ -31,3 +31,6 @@ the project of implementation address book
 刪除我的最愛：將特定聯絡人刪除我的最愛（把priority改成0） 
 
 關於新增、刪除我的最愛的部分，需要選出特定聯絡人（透過Y/N選擇）
+
+
+三版：新增模糊化搜尋（fuzzy search）的功能（模糊化的定義為字串誤差2以內）
