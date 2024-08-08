@@ -9,41 +9,128 @@ void print_select_mode(void)
 {
     printf("Please select mode : \n") ;
     
+    printf("0 init the file\n") ;
     printf("1 write in information\n") ;
     printf("2 take a look \n") ;
     printf("3 find someone\n") ;
     printf("4 delete someone\n") ;
+    printf("5 show my favorite\n") ;
+    printf("6 add in my favorite\n") ;
+    printf("7 remove my favorite\n") ;
     
     printf("-1 Closed \n") ;
     
     
 }
 
-bool find_someone(void)
+void init_file(void)
 {
-    printf("Find name : ") ;
+    FILE* fp = fopen( "contact_people_information" , "w" ) ;
+    assert( fp != NULL ) ;
+    fclose(fp) ;
+    return ;
+}
+
+bool change_my_favorite(int n)
+{
+    printf("Name : ") ;
     char name[100] = {0} ;
     scanf("%s" , name) ;
+    putchar('\n') ;
     
-    FILE* fp = fopen("contact_people_information" , "r") ;
-    assert( fp != NULL ) ;
+    FILE* fp = fopen( "contact_people_information" , "r+" ) ;
     
     char temp_name[100] = {0} ;
     long long int temp_number ;
+    int temp_priority ;
     
-    int find = 0 ;
-    while ( fscanf(fp , "%s%lld" , temp_name , &temp_number ) != EOF ) {
+    bool success = false ;
+    while ( fscanf(fp , "%s%lld%d" , temp_name , &temp_number , &temp_priority ) != EOF ) {
         if ( strcmp(temp_name , name) == 0 ) {
-            ++find ;
-            printf("%d : %s %010lld\n" , find , temp_name , temp_number) ;
+            printf("Is this one?(Y/N) : %s %010lld\n" , temp_name , temp_number) ;
+            char s[3] ;
+            scanf("%s" , s) ;
+            putchar('\n') ;
+            if ( s[0] == 'Y' ) {
+                success = true ;
+                fseek(fp , -1 , SEEK_CUR) ;
+                fprintf(fp , "%d" , n) ;
+                
+                break ;
+            }
         }
+        
         memset( temp_name , 0 , 100 ) ;
     }
-    
     fclose(fp) ;
+    return success ;
+}
+
+
+
+bool find_someone(void)
+{
+    printf("Choose what do you want to find : \n") ;
+    printf("1 Find by name\n") ;
+    printf("2 Find by number\n") ;
     
+    int mode ;
+    scanf("%d" , &mode) ;
     
-    return (find > 0) ;
+    if ( mode == 1 ) {
+        printf("Find name : ") ;
+        char name[100] = {0} ;
+        scanf("%s" , name) ;
+        putchar('\n') ;
+        
+        FILE* fp = fopen("contact_people_information" , "r") ;
+        assert( fp != NULL ) ;
+        
+        char temp_name[100] = {0} ;
+        long long int temp_number ;
+        int priority ;
+        
+        int find = 0 ;
+        while ( fscanf(fp , "%s%lld%d" , temp_name , &temp_number , &priority ) != EOF ) {
+            if ( strcmp(temp_name , name) == 0 ) {
+                ++find ;
+                printf("%d : %s %010lld\n" , find , temp_name , temp_number) ;
+            }
+            memset( temp_name , 0 , 100 ) ;
+        }
+        
+        fclose(fp) ;
+        
+        return (find > 0) ;
+    }
+    else {
+        assert( mode == 2 ) ;
+        long long int number ;
+        printf("Find number : ") ;
+        scanf("%lld" , &number) ;
+        putchar('\n') ;
+        
+        FILE* fp = fopen("contact_people_information" , "r") ;
+        assert( fp != NULL ) ;
+        
+        char temp_name[100] = {0} ;
+        long long int temp_number ;
+        int priority ;
+        
+        int find = 0 ;
+        while ( fscanf(fp , "%s%lld%d" , temp_name , &temp_number , &priority ) != EOF ) {
+            if ( temp_number == number ) {
+                ++find ;
+                printf("%d : %s %010lld\n" , find , temp_name , temp_number) ;
+            }
+            memset( temp_name , 0 , 100 ) ;
+        }
+        
+        fclose(fp) ;
+        
+        
+        return (find > 0) ;
+    }
 }
 
 bool write_in_information(void)
@@ -62,13 +149,13 @@ bool write_in_information(void)
     FILE* fp = fopen( "contact_people_information" , "a+" ) ;
     assert( fp != NULL ) ;
     
-    int result = fprintf(fp, "%s %lld\n" , name , number) ;
+    int result = fprintf(fp, "%s %lld 0\n" , name , number) ;
     
     fclose(fp) ;
     return ( result >= 0 ) ;
 }
 
-bool traverse_file(void)
+bool traverse_file(int standard)
 {
     FILE* fp = fopen( "contact_people_information" , "r" ) ;
     assert( fp != NULL ) ;
@@ -76,9 +163,13 @@ bool traverse_file(void)
     char name[100] = {0} ;
     long long int number ;
     int cursor = 1 ;
-    while ( fscanf(fp, "%s%lld" , name , &number) != EOF ) {
-        printf("%d : %s %010lld\n" , cursor , name , number ) ;
-        ++cursor ;
+    int priority ;
+    
+    while ( fscanf(fp, "%s%lld%d" , name , &number , &priority ) != EOF ) {
+        if ( priority >= standard ) {
+            printf("%d : %s %010lld\n" , cursor , name , number ) ;
+            ++cursor ;
+        }
         memset(name , 0 , 100) ;
     }
     
@@ -99,24 +190,29 @@ bool delete_someone(void)
     
     char string[MAX_N][100] = {{0}} ;
     long long int phone_number[MAX_N] ;
+    int priority[MAX_N] ;
     
     int cursor = 0 ;
     char temp[100] = {0} ;
     long long int temp_number ;
+    int temp_priority ;
     
     int candidate_cursor = 0 ;
     char candidate_name[MAX_N][100] = {{0}} ;
     long long int candidate_number[MAX_N] ;
+    int candidate_priority[MAX_N] ;
     
-    while ( fscanf(fp, "%s%lld" , temp , &temp_number ) != EOF ) {
+    while ( fscanf(fp, "%s%lld%d" , temp , &temp_number , &temp_priority ) != EOF ) {
         if ( strcmp(temp , delete_name) != 0 ) {
             strcpy( string[cursor] , temp ) ;
             phone_number[cursor] = temp_number ;
+            priority[cursor] = temp_priority ;
             ++cursor ;
         }
         else {
             strcpy( candidate_name[candidate_cursor] , temp ) ;
             candidate_number[candidate_cursor] = temp_number ;
+            candidate_priority[candidate_cursor] = temp_priority ;
             ++candidate_cursor ;
         }
         memset(temp, 0, 100) ;
@@ -127,7 +223,7 @@ bool delete_someone(void)
     assert( fp2 != NULL ) ;
     long long int record = 0 ;
     for( int i = 0 ; i < cursor ; i++ ) {
-        record += fprintf(fp , "%s %lld \n" , string[i] , phone_number[i] ) ;
+        record += fprintf(fp , "%s %lld %d\n" , string[i] , phone_number[i] , priority[i]) ;
     }
     
     printf("Choose which one should delete : \n") ;
@@ -146,7 +242,8 @@ bool delete_someone(void)
             continue ;
         }
         
-        record += fprintf(fp2 , "%s %lld\n" , candidate_name[i] , candidate_number[i] ) ;
+        record += fprintf(fp2 , "%s %lld %d\n" , candidate_name[i] ,
+                          candidate_number[i] , candidate_priority[i] ) ;
     }
     
     
@@ -166,6 +263,9 @@ int main(void)
         putchar('\n') ;
         
         switch ( mode ) {
+            case 0 :
+                init_file() ;
+                break ;
             case 1 :
                 if (write_in_information() )
                     printf("Success\n") ;
@@ -174,7 +274,7 @@ int main(void)
                 break ;
                 
             case 2 :
-                if (traverse_file())
+                if (traverse_file(0))
                     printf("Success\n") ;
                 else
                     printf("Failed : the file is empty\n") ;
@@ -193,6 +293,29 @@ int main(void)
                 else
                     printf("Failed : the file is empty\n") ;
                 break ;
+            
+            case 5 :
+                if (traverse_file(1))
+                    printf("Success\n") ;
+                else
+                    printf("Failed : your favorite is empty\n") ;
+                break ;
+                
+                
+            case 6 :
+                if ( change_my_favorite(1) )
+                    printf("Success\n") ;
+                else
+                    printf("Failed : no such person\n") ;
+                break ;
+                
+            case 7 :
+                if ( change_my_favorite(1) )
+                    printf("Success\n") ;
+                else
+                    printf("Failed : no such person\n") ;
+                break ;
+                    
                 
             case -1 :
                 printf("Closed\n") ;
