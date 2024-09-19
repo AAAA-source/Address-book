@@ -34,3 +34,7 @@ the project of implementation address book
 
 
 三版：新增模糊化搜尋（fuzzy search）的功能（模糊化的定義為字串誤差2以內）
+
+
+更新：2024/9/19
+修復「移除我的最愛」出錯的問題
