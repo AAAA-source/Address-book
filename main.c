@@ -336,7 +336,7 @@ int main(void)
                 break ;
                 
             case 7 :
-                if ( change_my_favorite(1) )
+                if ( change_my_favorite(0) )
                     printf("Success\n") ;
                 else
                     printf("Failed : no such person\n") ;
